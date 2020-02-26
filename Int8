@@ -9,7 +9,7 @@
 */
 
 #include<cstdint>		//needed to get int8_t alias as byte-size of 'short' is implementation-defined
-#include<limits>
+#include<limits>		//Use to get concept
 #include<type_traits>
 
 
@@ -43,6 +43,7 @@ class pulga::Int8{
 		static const inline size_t size = sizeof(int8_t);
 		static const inline size_t bsize = sizeof(int8_t) * 1024;
 		
+		//Type conversion for "first class" built-in types
 		
 		explicit operator bool(){return (this->inv)?true:false;}
 		operator char(){return this->inv;}
@@ -65,6 +66,7 @@ class pulga::Int8{
 		//There no coversion for type alias such as int8_t int18_t n cstdint
 		//users can add such conversion when needed
 		
+		//Unary Operators
 		
 		operator++(){return ++this->inv;}
 		operator++(int){ return this->inv++;}
@@ -257,7 +259,7 @@ auto operator""_n8(unsigned long long literal){
 }
 
 
-/////
+///// Type conversion 
 
 template<typename T>
 T constexpr operator+(pulga::Int8 fr, T to){
