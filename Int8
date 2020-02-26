@@ -10,7 +10,6 @@
 
 #include<cstdint>		//needed to get int8_t alias as byte-size of 'short' is implementation-defined
 #include<limits>
-#include<iostream>
 #include<type_traits>
 
 
