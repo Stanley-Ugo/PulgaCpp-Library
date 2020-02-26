@@ -1,0 +1,458 @@
+/*
+	Open Source MIT license
+	programmer: Pulja Team
+	Description: A Int8 type as effective as built-in types(int, char ,etc) with virtually
+	no runtime cost and a lot safer and effective
+	
+	Please read Int8.md or Int8.txt for documentations
+	
+*/
+
+#include<cstdint>		//needed to get int8_t alias as byte-size of 'short' is implementation-defined
+#include<limits>
+#include<iostream>
+#include<type_traits>
+
+
+namespace pulga{
+	class Int8;
+}
+
+class pulga::Int8{
+	private:
+		mutable int8_t inv{};
+
+		
+	public:
+		explicit constexpr inline Int8(int8_t arg):inv{arg}{}
+		constexpr inline Int8(const Int8& arg):inv{arg.inv}{}
+		Int8(Int8&&arg)=default;  //NB: default move constructor
+		
+		constexpr inline operator=(const Int8& arg){ return this->inv = arg.inv;}
+		constexpr Int8& operator=(Int8&&arg)=default;	//NB: default move operator
+		
+	
+		template<typename T>
+		operator=(T arg){
+			//Operator for other (Integral) types as operands
+			static_assert(std::is_integral<T>::value,"Type_Error: operand Must be of type Int");
+			return static_cast<int8_t>(this->inv = arg);
+		}
+		
+		static const inline int max = std::numeric_limits<int8_t>::max();
+		static const inline int min = std::numeric_limits<int8_t>::min();
+		static const inline size_t size = sizeof(int8_t);
+		static const inline size_t bsize = sizeof(int8_t) * 1024;
+		
+		
+		explicit operator bool(){return (this->inv)?true:false;}
+		operator char(){return this->inv;}
+		operator signed char(){return this->inv;}
+		operator unsigned char(){return this->inv;}
+		operator short(){return this->inv;}
+		operator unsigned short(){ return this->inv;}
+		operator int(){ return this->inv;}
+		operator unsigned int(){ return this->inv;}
+		operator long int(){ return this->inv;}
+		operator unsigned long(){ return this->inv;}
+		operator long long(){ return this->inv;}
+		operator unsigned long long(){return this->inv;}
+	
+		
+		operator float(){ return static_cast<float>(this->inv);}
+		operator double(){ return static_cast<double>(this->inv);}
+		operator long double(){ return static_cast<long double>(this->inv);}
+		
+		//There no coversion for type alias such as int8_t int18_t n cstdint
+		//users can add such conversion when needed
+		
+		
+		operator++(){return ++this->inv;}
+		operator++(int){ return this->inv++;}
+		operator--(){ return --this->inv;}
+		operator--(int){ return this->inv++;}
+		auto operator&(){ return &this->inv;}  //auto was specified to avoid implicit conversion to int of return type
+		operator*(){ return this->inv;}
+		operator!(){ return (this->inv)?true:false;}
+		
+		auto operator+(Int8 x)const{
+			return this->inv + x.inv;
+		}
+		
+		
+		auto operator-(Int8 x)const{
+			return this->inv - x.inv;
+		}
+		
+		auto operator*(Int8 x)const{
+			return this->inv * x.inv;
+		}
+
+		auto operator/(Int8 x)const{
+			return this->inv / x.inv;
+		}
+
+		
+		auto operator%(Int8 x)const{
+			return this->inv % x.inv;
+		}
+		
+		auto operator>>(Int8 x)const{
+			return this->inv >> x.inv;
+		}
+		
+		auto operator<<(Int8 x)const{
+			return this->inv << x.inv;
+		}
+		
+		bool operator<(Int8 x)const{
+			return this->inv < x.inv;
+		}
+		
+		bool operator>(Int8 x)const{
+			return this->inv > x.inv;
+		}
+		
+		bool operator<=(Int8 x)const{
+			return this->inv <= x.inv;
+		}
+		
+		bool operator>=(Int8 x)const{
+			return this->inv >= x.inv;
+		}
+		
+		bool operator==(Int8 x)const{
+			return this->inv == x.inv;
+		}
+		
+		bool operator!=(Int8 x)const{
+			return this->inv != x.inv;
+		}
+		
+		bool operator&&(Int8 x)const{
+			return this->inv && x.inv;
+		}
+		
+		bool operator||(Int8 x)const{
+			return this->inv || x.inv;
+		}
+		
+		bool operator&(Int8 x)const{
+			return this->inv & x.inv;
+		}
+		
+		bool operator|(Int8 x)const{
+			return this->inv | x.inv;
+		}
+		
+		bool operator^(Int8 x)const{
+			return this->inv ^ x.inv;
+		}
+		
+		auto operator+=(Int8 x)const{
+			return this->inv += x.inv;
+		}
+		
+		template<typename X>
+		auto operator+=(X arg){
+			static_assert(std::is_fundamental<X>::value);
+			return this->inv += arg;
+		}
+		
+		auto operator-=(Int8 x){
+			return this->inv -= x.inv;
+		}
+		
+		template<typename X>
+		auto operator-=(X arg){
+			static_assert(std::is_fundamental<X>::value);
+			return this->inv -= arg;
+		}
+		
+		auto operator*=(Int8 x){
+			return this->inv *= x.inv;
+		}
+		
+		template<typename X>
+		auto operator*=(X arg){
+			static_assert(std::is_fundamental<X>::value);
+			return this->inv *= arg;
+		}
+		
+		auto operator/=(Int8 x){
+			return this->inv /= x.inv;
+		}
+		
+		template<typename X>
+		auto operator/=(X arg){
+			static_assert(std::is_fundamental<X>::value);
+			return this->inv /= arg;
+		}
+		
+		auto operator%=(Int8 x){
+			return this->inv %= x.inv;
+		}
+		
+		template<typename X>
+		auto operator%=(X arg){
+			static_assert(std::is_fundamental<X>::value && std::is_integral<X>::value);
+			return this->inv %= arg;
+		}
+		
+		auto operator&=(Int8 x){
+			return this->inv &= x.inv;
+		}
+		
+		template<typename X>
+		auto operator&=(X arg){
+			static_assert(std::is_fundamental<X>::value && std::is_integral<X>::value);
+			return this->inv &= arg;
+		}
+		
+		auto operator|=(Int8 x){
+			return this->inv |= x.inv;
+		}
+		
+		template<typename X>
+		auto operator|=(X arg){
+			static_assert(std::is_fundamental<X>::value && std::is_integral<X>::value);
+			return this->inv |= arg;
+		}
+		
+		auto operator^=(Int8 x){
+			return this->inv ^= x.inv;
+		}
+		
+		template<typename X>
+		auto operator^=(X arg){
+			static_assert(std::is_fundamental<X>::value && std::is_integral<X>::value);
+			return this->inv ^= arg;
+		}
+		
+		
+		auto operator<<=(Int8 x){
+			return this->inv <<= x.inv;
+		}
+		
+		template<typename X>
+		auto operator<<=(X arg){
+			static_assert(std::is_fundamental<X>::value && std::is_integral<X>::value);
+			return this->inv <<= arg;
+		}
+		
+		auto operator>>=(Int8 x){
+			return this->inv >>= x.inv;
+		}
+		
+		template<typename X>
+		auto operator>>=(X arg){
+			static_assert(std::is_fundamental<X>::value && std::is_integral<X>::value);
+			return this->inv >>= arg;
+		}
+		
+};
+
+auto operator""_n8(unsigned long long literal){
+	//Literal of type Int8
+	return static_cast<int8_t>(literal);
+}
+
+
+/////
+
+template<typename T>
+T constexpr operator+(pulga::Int8 fr, T to){
+	static_assert(std::is_fundamental<T>::value);
+	return *fr + to;	
+}
+
+template<typename T>
+T constexpr operator+(T fr, pulga::Int8 to){
+	static_assert(std::is_fundamental<T>::value);
+	return fr + *to;
+}
+
+
+template<typename T>
+T constexpr operator-(pulga::Int8 fr, T to){
+	static_assert(std::is_fundamental<T>::value);
+	return *fr - to;	
+}
+
+template<typename T>
+T constexpr operator-(T fr, pulga::Int8 to){
+	static_assert(std::is_fundamental<T>::value);
+	return fr - *to;
+}
+
+
+template<typename T>
+T constexpr operator*(pulga::Int8 fr, T to){
+	static_assert(std::is_fundamental<T>::value);
+	return *fr * to;	
+}
+
+template<typename T>
+T constexpr operator*(T fr, pulga::Int8 to){
+	static_assert(std::is_fundamental<T>::value);
+	return fr * *to;
+}
+
+template<typename T>
+T constexpr operator%(pulga::Int8 fr, T to){
+	static_assert(std::is_fundamental<T>::value && std::is_integral<T>::value);
+	return *fr % to;	
+}
+
+template<typename T>
+T constexpr operator%(T fr, pulga::Int8 to){
+	static_assert(std::is_fundamental<T>::value && std::is_integral<T>::value);
+	return fr % *to;
+}
+
+
+template<typename T>
+bool constexpr operator<(pulga::Int8 fr, T to){
+	static_assert(std::is_fundamental<T>::value);
+	return *fr < to;	
+}
+
+template<typename T>
+bool constexpr operator<(T fr, pulga::Int8 to){
+	static_assert(std::is_fundamental<T>::value);
+	return fr < *to;
+}
+
+template<typename T>
+T constexpr operator<<(pulga::Int8 fr, T to){
+	static_assert(std::is_fundamental<T>::value && std::is_integral<T>::value);
+	return *fr << to;	
+}
+
+template<typename T>
+T constexpr operator<<(T fr, pulga::Int8 to){
+	static_assert(std::is_fundamental<T>::value && std::is_integral<T>::value);
+	return fr << *to;
+}
+
+template<typename T>
+T constexpr operator>>(pulga::Int8 fr, T to){
+	static_assert(std::is_fundamental<T>::value && std::is_integral<T>::value);
+	return *fr >> to;	
+}
+
+template<typename T>
+T constexpr operator>>(T fr, pulga::Int8 to){
+	static_assert(std::is_fundamental<T>::value && std::is_integral<T>::value);
+	return fr >> *to;
+}
+
+
+template<typename T>
+bool constexpr operator>(pulga::Int8 fr, T to){
+	static_assert(std::is_fundamental<T>::value);
+	return *fr > to;	
+}
+
+template<typename T>
+bool constexpr operator>(T fr, pulga::Int8 to){
+	static_assert(std::is_fundamental<T>::value);
+	return fr > *to;
+}
+
+template<typename T>
+bool constexpr operator<=(pulga::Int8 fr, T to){
+	static_assert(std::is_fundamental<T>::value);
+	return *fr <= to;	
+}
+
+template<typename T>
+bool constexpr operator<=(T fr, pulga::Int8 to){
+	static_assert(std::is_fundamental<T>::value);
+	return fr <= *to;
+}
+
+template<typename T>
+bool constexpr operator==(pulga::Int8 fr, T to){
+	static_assert(std::is_fundamental<T>::value);
+	return *fr == to;	
+}
+
+template<typename T>
+bool constexpr operator==(T fr, pulga::Int8 to){
+	static_assert(std::is_fundamental<T>::value);
+	return fr == *to;
+}
+
+template<typename T>
+bool constexpr operator!=(pulga::Int8 fr, T to){
+	static_assert(std::is_fundamental<T>::value);
+	return *fr > to;	
+}
+
+template<typename T>
+bool constexpr operator!=(T fr, pulga::Int8 to){
+	static_assert(std::is_fundamental<T>::value);
+	return fr != *to;
+}
+
+template<typename T>
+bool constexpr operator&&(pulga::Int8 fr, T to){
+	static_assert(std::is_fundamental<T>::value);
+	return *fr && to;	
+}
+
+template<typename T>
+bool constexpr operator&&(T fr, pulga::Int8 to){
+	static_assert(std::is_fundamental<T>::value);
+	return fr && *to;
+}
+
+template<typename T>
+bool constexpr operator||(pulga::Int8 fr, T to){
+	static_assert(std::is_fundamental<T>::value);
+	return *fr || to;	
+}
+
+template<typename T>
+bool constexpr operator||(T fr, pulga::Int8 to){
+	static_assert(std::is_fundamental<T>::value);
+	return fr || *to;
+}
+
+template<typename T>
+T constexpr operator&(pulga::Int8 fr, T to){
+	static_assert(std::is_fundamental<T>::value && std::is_integral<T>::value);
+	return *fr & to;	
+}
+
+template<typename T>
+T constexpr operator&(T fr, pulga::Int8 to){
+	static_assert(std::is_fundamental<T>::value && std::is_integral<T>::value);
+	return fr & *to;
+}
+
+template<typename T>
+T constexpr operator|(pulga::Int8 fr, T to){
+	static_assert(std::is_fundamental<T>::value && std::is_integral<T>::value);
+	return *fr | to;	
+}
+
+template<typename T>
+T constexpr operator|(T fr, pulga::Int8 to){
+	static_assert(std::is_fundamental<T>::value && std::is_integral<T>::value);
+	return fr | *to;
+}
+
+template<typename T>
+T constexpr operator^(pulga::Int8 fr, T to){
+	static_assert(std::is_fundamental<T>::value && std::is_integral<T>::value);
+	return *fr ^ to;	
+}
+
+template<typename T>
+T constexpr operator^(T fr, pulga::Int8 to){
+	static_assert(std::is_fundamental<T>::value && std::is_integral<T>::value);
+	return fr ^ *to;
+}
+
