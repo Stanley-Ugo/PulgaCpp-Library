@@ -6,7 +6,8 @@
 	type = int8
 	
 	For more information about type properties
-	open int8.txt
+	The difference between int8 and fundamental ints
+	is when overflow an exception is thrown
 	
 */
 
