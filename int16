@@ -1,0 +1,789 @@
+/*
+	MIT LICENSE 
+	PULGAC++
+	2020
+	
+	type = int16
+	
+	For more information about type properties
+	open int16.txt
+	
+*/
+
+#include<limits>
+#include<cstdint>
+#include<type_traits>
+
+
+namespace pulga_exception{
+	//Exception classes for THIS particular class
+	struct int16_max_length_exceeded{ int16_max_length_exceeded()=default; }; 
+	struct int16_min_length_exceeded{ int16_min_length_exceeded()=default; };
+	struct int16_literal_max_length_exceeded{ int16_literal_max_length_exceeded()=default;};
+
+}
+
+namespace pulga{
+	
+	class int16{
+		private:
+			int16_t inv;
+		
+	
+			
+		public:
+			static inline const auto  maxLength  =  std::numeric_limits<int16_t>::max();
+			static inline const auto minLength = std::numeric_limits<int16_t>::min();
+			int16_t res(){ return this->inv;}; //get "access" to private variable
+			
+			
+			inline explicit constexpr int16(int16_t arg):inv{arg}{} //constructor for literal type
+			
+			
+			//Constructor
+			template<typename INT> 
+			inline explicit int16(INT& y){
+				static_assert(std::is_integral<INT>::value,"Non-integral type detected");
+								
+				//Type Guard
+				[&](){ if (y > maxLength)throw pulga_exception::int16_max_length_exceeded{};
+					   if(y < minLength) throw pulga_exception::int16_min_length_exceeded{}; 
+					   
+				}();
+				
+				this->inv = y;
+			}
+			
+			template<typename INT>
+			inline auto operator=(INT y){
+				static_assert(std::is_integral<INT>::value,"Non-integral type detected"); //Non integral types not allowed
+				
+				//Type Guard
+				[&](){ if (y > maxLength)throw pulga_exception::int16_max_length_exceeded{};
+					   if(y < minLength) throw pulga_exception::int16_min_length_exceeded{}; 
+					   
+				}();
+			
+				return this->inv = y;		
+			}
+			
+			//Type Coversions
+			explicit operator bool(){ return static_cast<bool>(this->inv);}
+			
+			template<typename T>
+			operator T(){ 
+				if constexpr(std::is_integral<T>::value){
+					return static_cast<T>(this->inv);
+				}
+				
+				
+				if constexpr(std::is_floating_point<T>::value){
+					//Potential loss of information!!
+					return static_cast<T>(this->inv);
+				}
+				
+				//Other Types under development
+				
+			} 
+			
+			template<typename T> operator T*()=delete; //of Course!
+			
+			//Unary operators
+			
+			auto operator~()const{ return ~this->inv;}
+			auto operator&()const{ return &this->inv;}
+			auto operator!()const{ return !this->inv;}
+			auto operator-()const{return -this->inv;}
+			auto operator+()const{ return +this->inv;} //No-effect
+			operator*()=delete;
+			
+			auto operator++(){ //prefixs
+				[this](){ //Type Guard
+					int y = this->inv;
+					++y;
+					if(y > maxLength) throw pulga_exception::int16_max_length_exceeded{};
+					if(y < minLength) throw pulga_exception::int16_min_length_exceeded{};
+					
+				}();
+				
+				return ++this->inv;			
+			}
+			
+			auto operator--(){
+				[this](){ //Type Guard
+					int y = this->inv;
+					--y;
+					if(y > maxLength) throw pulga_exception::int16_max_length_exceeded{};
+					if(y < minLength) throw pulga_exception::int16_min_length_exceeded{};
+					
+				}();
+				
+				
+				return --this->inv;
+			
+			}
+			
+			auto operator++(int){ //suffixes
+				[this](){ //Type Guard
+					int y = this->inv;
+					y++;
+					if(y > maxLength) throw pulga_exception::int16_max_length_exceeded{};
+					if(y < minLength) throw pulga_exception::int16_min_length_exceeded{};
+					
+				}();
+				
+				return this->inv;
+			}
+			
+			auto operator--(int){
+				[this](){ //Type Guard
+					int y = this->inv;
+					y--;
+					if(y > maxLength) throw pulga_exception::int16_max_length_exceeded{};
+					if(y < minLength) throw pulga_exception::int16_min_length_exceeded{};
+					
+				}();
+				
+				return this->inv;
+			}
+			
+			//Binary operators
+		
+			auto operator+(pulga::int16 p)const{ return this->inv + p.res(); }
+			
+			auto operator-(pulga::int16 p)const{	return this->inv - p.res(); }
+			
+			auto operator*(pulga::int16 p)const{	return this->inv * p.res(); }
+			
+			auto operator/(pulga::int16 p)const{ return this->inv / p.res();}
+			
+			auto operator%(pulga::int16 p)const{	return this->inv % p.res();}
+			
+			//bitwise shift operator
+			auto operator>>(pulga::int16 p)const{ return this->inv >> p.res(); }
+			auto operator<<(pulga::int16 p)const{ return this->inv << p.res(); }
+		
+			//relational operators
+			auto operator<(pulga::int16 p)->bool const{ return this->inv < p.res();}
+			auto operator<=(pulga::int16 p)->bool const{ return this->inv <= p.res();}
+			auto operator>(pulga::int16 p)->bool const{ return this->inv > p.res();}
+			auto operator>=(pulga::int16 p)->bool const{ return this->inv >= p.res();}
+			
+			//equality operators
+			auto operator==(pulga::int16 p)->bool const{ return this->inv == p.res();}
+			auto operator!=(pulga::int16 p)->bool const{ return this->inv != p.res();}
+			
+			//bitwise & ^ |
+			auto operator&(pulga::int16 p)const{ return this->inv & p.res(); }
+			auto operator^(pulga::int16 p)const{ return this->inv ^ p.res(); }
+			auto operator|(pulga::int16 p)const{ return this->inv | p.res(); }
+			
+			//AND and OR
+			auto operator&&(pulga::int16 p)const{ return this->inv && p.res(); }
+			auto operator||(pulga::int16 p)const{ return this->inv || p.res(); }
+			
+			//assignment operators
+			
+			auto operator+=(pulga::int16 p){
+				
+				[this,&p](){//TypeGuard
+					int temp = this->inv;  //Coversion is defined earlier
+					temp += int(p); //Brute-Force Conversion int alse defined
+					
+					if(temp > maxLength) throw pulga_exception::int16_max_length_exceeded{};
+					if(temp < minLength) throw pulga_exception::int16_min_length_exceeded{};
+				}(); 
+				
+				 this->inv = this->inv +  p;
+				 return this->inv;
+				
+			}
+			
+			template<typename T>
+			friend auto operator+=(pulga::int16& p,T q){
+				
+				[&p,&q](){//TypeGuard
+					int temp = p.inv;  
+					temp += int(q); 
+					
+					if(temp > maxLength) throw pulga_exception::int16_max_length_exceeded{};
+					if(temp < minLength) throw pulga_exception::int16_min_length_exceeded{};
+				}(); 
+				
+				 p.inv = p.inv +  q;
+				 return p.inv;
+			}
+			
+			template<typename T>
+			friend auto operator+=(T& q, pulga::int16 p){
+				
+				//Type Guard Not needed since p remains unchanged
+				
+				return q += p.inv;
+			}
+		
+		///////////////////////////////////////////////////////////////////////////	
+		
+		auto operator-=(pulga::int16 p){
+				
+				[this,&p](){//TypeGuard
+					int temp = this->inv;  //Coversion is defined earlier
+					temp -= int(p); //Brute-Force Conversion int alse defined
+					
+					if(temp > maxLength) throw pulga_exception::int16_max_length_exceeded{};
+					if(temp < minLength) throw pulga_exception::int16_min_length_exceeded{};
+				}(); 
+				
+				 this->inv = this->inv -  p;
+				 return this->inv;
+				
+			}
+			
+			template<typename T>
+			friend auto operator-=(pulga::int16& p,T q){
+				
+				[&p,&q](){//TypeGuard
+					int temp = p.inv;  
+					temp -= int(q); 
+					
+					if(temp > maxLength) throw pulga_exception::int16_max_length_exceeded{};
+					if(temp < minLength) throw pulga_exception::int16_min_length_exceeded{};
+				}(); 
+				
+				 p.inv = p.inv -  q;
+				 return p.inv;
+			}
+			
+			template<typename T>
+			friend auto operator-=(T& q, pulga::int16 p){
+				
+				//Type Guard Not needed since p remains unchanged
+				
+				return q -= p.inv;
+			}
+
+			
+			/////////////////////////////////////////////////////
+			
+			auto operator/=(pulga::int16 p){
+				
+				[this,&p](){//TypeGuard
+					int temp = this->inv;  //Coversion is defined earlier
+					temp /= int(p); //Brute-Force Conversion int alse defined
+					
+					if(temp > maxLength) throw pulga_exception::int16_max_length_exceeded{};
+					if(temp < minLength) throw pulga_exception::int16_min_length_exceeded{};
+				}(); 
+				
+				 this->inv = this->inv /  p;
+				 return this->inv;
+				
+			}
+			
+			template<typename T>
+			friend auto operator/=(pulga::int16& p,T q){
+				
+				[&p,&q](){//TypeGuard
+					int temp = p.inv;  
+					temp /= int(q); 
+					
+					if(temp > maxLength) throw pulga_exception::int16_max_length_exceeded{};
+					if(temp < minLength) throw pulga_exception::int16_min_length_exceeded{};
+				}(); 
+				
+				 p.inv = p.inv /  q;
+				 return p.inv;
+			}
+			
+			template<typename T>
+			friend auto operator/=(T& q, pulga::int16 p){
+				
+				//Type Guard Not needed since p remains unchanged
+				
+				return q /= p.inv;
+			}
+			
+			
+			///////////////////////////////////////////////////////////
+			
+			auto operator%=(pulga::int16 p){
+				
+				[this,&p](){//TypeGuard
+					int temp = this->inv;  //Coversion is defined earlier
+					temp % int(p); //Brute-Force Conversion int alse defined
+					
+					if(temp > maxLength) throw pulga_exception::int16_max_length_exceeded{};
+					if(temp < minLength) throw pulga_exception::int16_min_length_exceeded{};
+				}(); 
+				
+				 this->inv = this->inv %  p;
+				 return this->inv;
+				
+			}
+			
+			template<typename T>
+			friend auto operator%=(pulga::int16& p,T q){
+				static_assert(std::is_integral<T>::value,"modulus operator, dont support floating numbers");
+				
+				[&p,&q](){//TypeGuard
+					int temp = p.inv;  
+					temp %= int(q); 
+					
+					if(temp > maxLength) throw pulga_exception::int16_max_length_exceeded{};
+					if(temp < minLength) throw pulga_exception::int16_min_length_exceeded{};
+				}(); 
+				
+				 p.inv = p.inv %  q;
+				 return p.inv;
+			}
+			
+			template<typename T>
+			friend auto operator%=(T& q, pulga::int16 p){
+				static_assert(std::is_integral<T>::value,"modulus operator, dont support floating numbers");
+				
+				//Type Guard Not needed since p remains unchanged
+				
+				return q %= p.inv;
+			}
+			
+			
+			/////////////////////////////////////////////////////////////////////////////////////////////////
+			auto operator*=(pulga::int16 p){
+				
+				[this,&p](){//TypeGuard
+					int temp = this->inv;  //Coversion is defined earlier
+					temp *= int(p); //Brute-Force Conversion int alse defined
+					
+					if(temp > maxLength) throw pulga_exception::int16_max_length_exceeded{};
+					if(temp < minLength) throw pulga_exception::int16_min_length_exceeded{};
+				}(); 
+				
+				 this->inv = this->inv *  p;
+				 return this->inv;
+				
+			}
+			
+			template<typename T>
+			friend auto operator*=(pulga::int16& p,T q){
+				
+				[&p,&q](){//TypeGuard
+					int temp = p.inv;  
+					temp *= int(q); 
+					
+					if(temp > maxLength) throw pulga_exception::int16_max_length_exceeded{};
+					if(temp < minLength) throw pulga_exception::int16_min_length_exceeded{};
+				}(); 
+				
+				 p.inv = p.inv *  q;
+				 return p.inv;
+			}
+			
+			template<typename T>
+			friend auto operator*=(T& q, pulga::int16 p){
+				
+				//Type Guard Not needed since p remains unchanged
+				
+				return q *= p.inv;
+			}
+			
+			////////////////////////////////////////////////////////////////////////
+			
+			auto operator<<=(pulga::int16 p){
+				
+				[this,&p](){//TypeGuard
+					int temp = this->inv;  //Coversion is defined earlier
+					temp << int(p); //Brute-Force Conversion int alse defined
+					
+					if(temp > maxLength) throw pulga_exception::int16_max_length_exceeded{};
+					if(temp < minLength) throw pulga_exception::int16_min_length_exceeded{};
+				}(); 
+				
+				 this->inv = this->inv <<  p;
+				 return this->inv;
+				
+			}
+			
+			template<typename T>
+			friend auto operator<<=(pulga::int16& p,T q){
+				static_assert(std::is_integral<T>::value,"left-shift operator, dont support floating numbers");
+				
+				[&p,&q](){//TypeGuard
+					int temp = p.inv;  
+					temp <<= int(q); 
+					
+					if(temp > maxLength) throw pulga_exception::int16_max_length_exceeded{};
+					if(temp < minLength) throw pulga_exception::int16_min_length_exceeded{};
+				}(); 
+				
+				 p.inv = p.inv <<  q;
+				 return p.inv;
+			}
+			
+			template<typename T>
+			friend auto operator<<=(T& q, pulga::int16 p){
+				static_assert(std::is_integral<T>::value,"left-shift operator, dont support floating numbers");
+				
+				//Type Guard Not needed since p remains unchanged
+				
+				return q <<= p.inv;
+			}
+			
+			////////////////////////////////////////////////////////////////////////////
+			auto operator&=(pulga::int16 p){
+				
+				[this,&p](){//TypeGuard
+					int temp = this->inv;  //Coversion is defined earlier
+					temp & int(p); //Brute-Force Conversion int alse defined
+					
+					if(temp > maxLength) throw pulga_exception::int16_max_length_exceeded{};
+					if(temp < minLength) throw pulga_exception::int16_min_length_exceeded{};
+				}(); 
+				
+				 this->inv = this->inv &  p;
+				 return this->inv;
+				
+			}
+			
+			template<typename T>
+			friend auto operator&=(pulga::int16& p,T q){
+				static_assert(std::is_integral<T>::value,"The bitwise & operator, dont support floating numbers");
+				
+				[&p,&q](){//TypeGuard
+					int temp = p.inv;  
+					temp &= int(q); 
+					
+					if(temp > maxLength) throw pulga_exception::int16_max_length_exceeded{};
+					if(temp < minLength) throw pulga_exception::int16_min_length_exceeded{};
+				}(); 
+				
+				 p.inv = p.inv &  q;
+				 return p.inv;
+			}
+			
+			template<typename T>
+			friend auto operator&=(T& q, pulga::int16 p){
+				static_assert(std::is_integral<T>::value,"The bitwise & operator, dont support floating numbers");
+				
+				//Type Guard Not needed since p remains unchanged
+				
+				return q &= p.inv;
+			}
+			//////////////////////////////////////////////////////////////////////////////////////
+			auto operator|=(pulga::int16 p){
+				
+				[this,&p](){//TypeGuard
+					int temp = this->inv;  //Coversion is defined earlier
+					temp | int(p); //Brute-Force Conversion int alse defined
+					
+					if(temp > maxLength) throw pulga_exception::int16_max_length_exceeded{};
+					if(temp < minLength) throw pulga_exception::int16_min_length_exceeded{};
+				}(); 
+				
+				 this->inv = this->inv |  p;
+				 return this->inv;
+				
+			}
+			
+			template<typename T>
+			friend auto operator|=(pulga::int16& p,T q){
+				static_assert(std::is_integral<T>::value,"the bitwise | operator, dont support floating numbers");
+				
+				[&p,&q](){//TypeGuard
+					int temp = p.inv;  
+					temp |= int(q); 
+					
+					if(temp > maxLength) throw pulga_exception::int16_max_length_exceeded{};
+					if(temp < minLength) throw pulga_exception::int16_min_length_exceeded{};
+				}(); 
+				
+				 p.inv = p.inv |  q;
+				 return p.inv;
+			}
+			
+			template<typename T>
+			friend auto operator|=(T& q, pulga::int16 p){
+				static_assert(std::is_integral<T>::value,"the bitwise | operator, dont support floating numbers");
+				
+				//Type Guard Not needed since p remains unchanged
+				
+				return q |= p.inv;
+			}
+			/////////////////////////////////////////////////////////////////////////////////////////////////////
+			auto operator^=(pulga::int16 p){
+				
+				[this,&p](){//TypeGuard
+					int temp = this->inv;  //Coversion is defined earlier
+					temp ^ int(p); //Brute-Force Conversion int alse defined
+					
+					if(temp > maxLength) throw pulga_exception::int16_max_length_exceeded{};
+					if(temp < minLength) throw pulga_exception::int16_min_length_exceeded{};
+				}(); 
+				
+				 this->inv = this->inv ^  p;
+				 return this->inv;
+				
+			}
+			
+			template<typename T>
+			friend auto operator^=(pulga::int16& p,T q){
+				static_assert(std::is_integral<T>::value,"the bitwise ^ operator, dont support floating numbers");
+				
+				[&p,&q](){//TypeGuard
+					int temp = p.inv;  
+					temp ^= int(q); 
+					
+					if(temp > maxLength) throw pulga_exception::int16_max_length_exceeded{};
+					if(temp < minLength) throw pulga_exception::int16_min_length_exceeded{};
+				}(); 
+				
+				 p.inv = p.inv ^  q;
+				 return p.inv;
+			}
+			
+			template<typename T>
+			friend auto operator^=(T& q, pulga::int16 p){
+				static_assert(std::is_integral<T>::value,"the bitwise ^ operator, dont support floating numbers");
+				
+				//Type Guard Not needed since p remains unchanged
+				
+				return q ^= p.inv;
+			}
+		
+		
+		
+			
+
+			
+			
+
+
+			
+			
+			
+			
+			
+	};
+}
+
+constexpr auto operator""_i16(unsigned long long p){
+	if(p > std::numeric_limits<int16_t>::max()){
+		
+		
+		throw pulga_exception::int16_literal_max_length_exceeded{};
+	}
+	
+	return pulga::int16{static_cast<int16_t>(p)};
+}
+
+template<typename T>
+auto operator+(pulga::int16 fr, T to)->T{
+	return fr.res() + to;
+}
+
+template<typename T> 
+auto operator+(T to, pulga::int16 fr)->T{ 
+	return to + fr.res();
+}
+
+
+template<typename T>
+auto operator-(pulga::int16 fr, T to)->T{
+	return fr.res() - to;
+}
+
+template<typename T> 
+auto operator-(T to, pulga::int16 fr)->T{ 
+	return to - fr.res();
+}
+
+
+template<typename T>
+auto operator*(pulga::int16 fr, T to)->T{
+	return fr.res() * to;
+}
+
+template<typename T> 
+auto operator*(T to, pulga::int16 fr)->T{ 
+	return to * fr.res();
+}
+
+template<typename T>
+auto operator%(pulga::int16 fr, T to)->T{
+	static_assert(std::is_integral<T>::value,
+	"invalid operands of types "
+	"'int16_t'and 'long double' to binary 'operator%'");
+	return fr.res() % to;
+}
+
+template<typename T> 
+auto operator%(T to, pulga::int16 fr)->T{ 
+	static_assert(std::is_integral<T>::value,
+	"invalid operands of types "
+	"'int16_t'and 'long double' to binary 'operator%'");
+	return to % fr.res();
+}
+
+
+template<typename T>
+auto operator>>(pulga::int16 fr, T to)->T{
+	static_assert(std::is_integral<T>::value,
+	"invalid operands of types "
+	"'int16_t'and 'long double' to binary 'operator>>'");
+	return fr.res() >> to;
+}
+
+template<typename T> 
+auto operator>>(T to, pulga::int16 fr)->T{ 
+	static_assert(std::is_integral<T>::value,
+	"invalid operands of types "
+	"'int16_t'and 'long double' to binary 'operator>>'");
+	return to >> fr.res();
+}
+
+
+template<typename T>
+auto operator<<(pulga::int16 fr, T to)->T{
+	static_assert(std::is_integral<T>::value,
+	"invalid operands of types "
+	"'int16_t'and 'long double' to binary 'operator<<'");
+	return fr.res() << to;
+}
+
+template<typename T> 
+auto operator<<(T to, pulga::int16 fr)->T{ 
+	static_assert(std::is_integral<T>::value,
+	"invalid operands of types "
+	"'int16_t'and 'long double' to binary 'operator<<'");
+	return to << fr.res();
+}
+
+
+template<typename T>
+auto operator<(pulga::int16 fr, T to)->bool{
+	return fr.res() < to;
+}
+
+template<typename T> 
+auto operator<(T to, pulga::int16 fr)->bool{ 
+	return to < fr.res();
+}
+
+template<typename T>
+auto operator>(pulga::int16 fr, T to)->bool{
+	return fr.res() > to;
+}
+
+template<typename T> 
+auto operator>(T to, pulga::int16 fr)->bool{ 
+	return to > fr.res();
+}
+
+template<typename T>
+auto operator<=(pulga::int16 fr, T to)->bool{
+	return fr.res() <= to;
+}
+
+template<typename T> 
+auto operator<=(T to, pulga::int16 fr)->bool{ 
+	return to <= fr.res();
+}
+
+template<typename T>
+auto operator>=(pulga::int16 fr, T to)->bool{
+	return fr.res() >= to;
+}
+
+template<typename T> 
+auto operator>=(T to, pulga::int16 fr)->bool{ 
+	return to >= fr.res();
+}
+
+template<typename T>
+auto operator==(pulga::int16 fr, T to)->bool{
+	return fr.res() == to;
+}
+
+template<typename T> 
+auto operator==(T to, pulga::int16 fr)->bool{ 
+	return to == fr.res();
+}
+
+template<typename T>
+auto operator!=(pulga::int16 fr, T to)->bool{
+	return fr.res() != to;
+}
+
+template<typename T> 
+auto operator!=(T to, pulga::int16 fr)->bool{ 
+	return to != fr.res();
+}
+
+template<typename T>
+auto operator&(pulga::int16 fr, T to)->T{
+	static_assert(std::is_integral<T>::value,
+	"invalid operands of types "
+	"'int16_t'and 'long double' to binary 'operator&'");
+	return fr.res() & to;
+}
+
+template<typename T> 
+auto operator&(T to, pulga::int16 fr)->T{ 
+	static_assert(std::is_integral<T>::value,
+	"invalid operands of types "
+	"'int16_t'and 'long double' to binary 'operator&'");
+	return to & fr.res();
+}
+
+template<typename T>
+auto operator^(pulga::int16 fr, T to)->T{
+	static_assert(std::is_integral<T>::value,
+	"invalid operands of types "
+	"'int16_t'and 'long double' to binary 'operator^'");
+	return fr.res() ^ to;
+}
+
+template<typename T> 
+auto operator^(T to, pulga::int16 fr)->T{ 
+	static_assert(std::is_integral<T>::value,
+	"invalid operands of types "
+	"'int16_t'and 'long double' to binary 'operator^'");
+	return to ^ fr.res();
+}
+
+template<typename T>
+auto operator|(pulga::int16 fr, T to)->T{
+	static_assert(std::is_integral<T>::value,
+	"invalid operands of types "
+	"'int16_t'and 'long double' to binary 'operator|'");
+	return fr.res() | to;
+}
+
+template<typename T> 
+auto operator|(T to, pulga::int16 fr)->T{ 
+	static_assert(std::is_integral<T>::value,
+	"invalid operands of types "
+	"'int16_t'and 'long double' to binary 'operator|'");
+	return to | fr.res();
+}
+
+template<typename T>
+auto operator&&(pulga::int16 fr, T to)->bool{
+	return fr.res() && to;
+}
+
+template<typename T> 
+auto operator&&(T to, pulga::int16 fr)->bool{ 
+	return to && fr.res();
+}
+
+
+template<typename T>
+auto operator||(pulga::int16 fr, T to)->bool{
+	return fr.res() || to;
+}
+
+template<typename T> 
+auto operator||(T to, pulga::int16 fr)->bool{ 
+	return to || fr.res();
+}
+
