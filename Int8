@@ -1,459 +1,791 @@
 /*
-	Open Source MIT license
-	programmer: Pulja Team
-	Description: A Int8 type as effective as built-in types(int, char ,etc) with virtually
-	no runtime cost and a lot safer and effective
+	MIT LICENSE 
+	PULGAC++
+	2020
 	
-	Please read Int8.md or Int8.txt for documentations
+	type = int8
+	
+	For more information about type properties
+	open int8.txt
 	
 */
 
-#include<cstdint>		//needed to get int8_t alias as byte-size of 'short' is implementation-defined
-#include<limits>		//Use to get concept
+#include<limits>
+#include<cstdint>
 #include<type_traits>
+#include<iostream>
 
+namespace pulga_exception{
+	//Exception classes for THIS particular class
+	struct int8_max_length_exceeded{ int8_max_length_exceeded()=default; }; 
+	struct int8_min_length_exceeded{ int8_min_length_exceeded()=default; };
+	struct int8_literal_max_length_exceeded{ int8_literal_max_length_exceeded()=default;};
+
+}
 
 namespace pulga{
-	class Int8;
-}
-
-class pulga::Int8{
-	private:
-		mutable int8_t inv{};
-
-		
-	public:
-		explicit constexpr inline Int8(int8_t arg):inv{arg}{}
-		constexpr inline Int8(const Int8& arg):inv{arg.inv}{}
-		Int8(Int8&&arg)=default;  //NB: default move constructor
-		
-		constexpr inline operator=(const Int8& arg){ return this->inv = arg.inv;}
-		constexpr Int8& operator=(Int8&&arg)=default;	//NB: default move operator
+	
+	class int8{
+		private:
+			int8_t inv;
 		
 	
-		template<typename T>
-		operator=(T arg){
-			//Operator for other (Integral) types as operands
-			static_assert(std::is_integral<T>::value,"Type_Error: operand Must be of type Int");
-			return static_cast<int8_t>(this->inv = arg);
-		}
+			
+		public:
+			static inline const auto  maxLength  =  std::numeric_limits<int8_t>::max();
+			static inline const auto minLength = std::numeric_limits<int8_t>::min();
+			int8_t res(){ return this->inv;}; //get "access" to private variable
+			
+			
+			inline explicit constexpr int8(int8_t arg):inv{arg}{} //constructor for literal type
+			
+			
+			//Constructor
+			template<typename INT> 
+			inline explicit int8(INT& y){
+				static_assert(std::is_integral<INT>::value,"Non-integral type detected");
+								
+				//Type Guard
+				[&](){ if (y > maxLength)throw pulga_exception::int8_max_length_exceeded{};
+					   if(y < minLength) throw pulga_exception::int8_min_length_exceeded{}; 
+					   
+				}();
+				
+				this->inv = y;
+			}
+			
+			template<typename INT>
+			inline auto operator=(INT y){
+				static_assert(std::is_integral<INT>::value,"Non-integral type detected"); //Non integral types not allowed
+				
+				//Type Guard
+				[&](){ if (y > maxLength)throw pulga_exception::int8_max_length_exceeded{};
+					   if(y < minLength) throw pulga_exception::int8_min_length_exceeded{}; 
+					   
+				}();
+			
+				return this->inv = y;		
+			}
+			
+			//Type Coversions
+			explicit operator bool(){ return static_cast<bool>(this->inv);}
+			
+			template<typename T>
+			operator T(){ 
+				if constexpr(std::is_integral<T>::value){
+					return static_cast<T>(this->inv);
+				}
+				
+				
+				if constexpr(std::is_floating_point<T>::value){
+					//Potential loss of information!!
+					return static_cast<T>(this->inv);
+				}
+				
+				//Other Types under development
+				
+			} 
+			
+			template<typename T> operator T*()=delete; //of Course!
+			
+			//Unary operators
+			
+			auto operator~()const{ return ~this->inv;}
+			auto operator&()const{ return &this->inv;}
+			auto operator!()const{ return !this->inv;}
+			auto operator-()const{return -this->inv;}
+			auto operator+()const{ return +this->inv;} //No-effect
+			operator*()=delete;
+			
+			auto operator++(){ //prefixs
+				[this](){ //Type Guard
+					int y = this->inv;
+					++y;
+					if(y > maxLength) throw pulga_exception::int8_max_length_exceeded{};
+					if(y < minLength) throw pulga_exception::int8_min_length_exceeded{};
+					
+				}();
+				
+				return ++this->inv;			
+			}
+			
+			auto operator--(){
+				[this](){ //Type Guard
+					int y = this->inv;
+					--y;
+					if(y > maxLength) throw pulga_exception::int8_max_length_exceeded{};
+					if(y < minLength) throw pulga_exception::int8_min_length_exceeded{};
+					
+				}();
+				
+				
+				return --this->inv;
+			
+			}
+			
+			auto operator++(int){ //suffixes
+				[this](){ //Type Guard
+					int y = this->inv;
+					y++;
+					if(y > maxLength) throw pulga_exception::int8_max_length_exceeded{};
+					if(y < minLength) throw pulga_exception::int8_min_length_exceeded{};
+					
+				}();
+				
+				return this->inv;
+			}
+			
+			auto operator--(int){
+				[this](){ //Type Guard
+					int y = this->inv;
+					y--;
+					if(y > maxLength) throw pulga_exception::int8_max_length_exceeded{};
+					if(y < minLength) throw pulga_exception::int8_min_length_exceeded{};
+					
+				}();
+				
+				return this->inv;
+			}
+			
+			//Binary operators
 		
-		static const inline int max = std::numeric_limits<int8_t>::max();
-		static const inline int min = std::numeric_limits<int8_t>::min();
-		static const inline size_t size = sizeof(int8_t);
-		static const inline size_t bsize = sizeof(int8_t) * 1024;
+			auto operator+(pulga::int8 p)const{ return this->inv + p.res(); }
+			
+			auto operator-(pulga::int8 p)const{	return this->inv - p.res(); }
+			
+			auto operator*(pulga::int8 p)const{	return this->inv * p.res(); }
+			
+			auto operator/(pulga::int8 p)const{ return this->inv / p.res();}
+			
+			auto operator%(pulga::int8 p)const{	return this->inv % p.res();}
+			
+			//bitwise shift operator
+			auto operator>>(pulga::int8 p)const{ return this->inv >> p.res(); }
+			auto operator<<(pulga::int8 p)const{ return this->inv << p.res(); }
 		
-		//Type conversion for "first class" built-in types
+			//relational operators
+			auto operator<(pulga::int8 p)->bool const{ return this->inv < p.res();}
+			auto operator<=(pulga::int8 p)->bool const{ return this->inv <= p.res();}
+			auto operator>(pulga::int8 p)->bool const{ return this->inv > p.res();}
+			auto operator>=(pulga::int8 p)->bool const{ return this->inv >= p.res();}
+			
+			//equality operators
+			auto operator==(pulga::int8 p)->bool const{ return this->inv == p.res();}
+			auto operator!=(pulga::int8 p)->bool const{ return this->inv != p.res();}
+			
+			//bitwise & ^ |
+			auto operator&(pulga::int8 p)const{ return this->inv & p.res(); }
+			auto operator^(pulga::int8 p)const{ return this->inv ^ p.res(); }
+			auto operator|(pulga::int8 p)const{ return this->inv | p.res(); }
+			
+			//AND and OR
+			auto operator&&(pulga::int8 p)const{ return this->inv && p.res(); }
+			auto operator||(pulga::int8 p)const{ return this->inv || p.res(); }
+			
+			//assignment operators
+			
+			auto operator+=(pulga::int8 p){
+				
+				[this,&p](){//TypeGuard
+					int temp = this->inv;  //Coversion is defined earlier
+					temp += int(p); //Brute-Force Conversion int alse defined
+					
+					if(temp > maxLength) throw pulga_exception::int8_max_length_exceeded{};
+					if(temp < minLength) throw pulga_exception::int8_min_length_exceeded{};
+				}(); 
+				
+				 this->inv = this->inv +  p;
+				 return this->inv;
+				
+			}
+			
+			template<typename T>
+			friend auto operator+=(pulga::int8& p,T q){
+				
+				[&p,&q](){//TypeGuard
+					int temp = p.inv;  
+					temp += int(q); 
+					
+					if(temp > maxLength) throw pulga_exception::int8_max_length_exceeded{};
+					if(temp < minLength) throw pulga_exception::int8_min_length_exceeded{};
+				}(); 
+				
+				 p.inv = p.inv +  q;
+				 return p.inv;
+			}
+			
+			template<typename T>
+			friend auto operator+=(T& q, pulga::int8 p){
+				
+				//Type Guard Not needed since p remains unchanged
+				
+				return q += p.inv;
+			}
 		
-		explicit operator bool(){return (this->inv)?true:false;}
-		operator char(){return this->inv;}
-		operator signed char(){return this->inv;}
-		operator unsigned char(){return this->inv;}
-		operator short(){return this->inv;}
-		operator unsigned short(){ return this->inv;}
-		operator int(){ return this->inv;}
-		operator unsigned int(){ return this->inv;}
-		operator long int(){ return this->inv;}
-		operator unsigned long(){ return this->inv;}
-		operator long long(){ return this->inv;}
-		operator unsigned long long(){return this->inv;}
+		///////////////////////////////////////////////////////////////////////////	
+		
+		auto operator-=(pulga::int8 p){
+				
+				[this,&p](){//TypeGuard
+					int temp = this->inv;  //Coversion is defined earlier
+					temp -= int(p); //Brute-Force Conversion int alse defined
+					
+					if(temp > maxLength) throw pulga_exception::int8_max_length_exceeded{};
+					if(temp < minLength) throw pulga_exception::int8_min_length_exceeded{};
+				}(); 
+				
+				 this->inv = this->inv -  p;
+				 return this->inv;
+				
+			}
+			
+			template<typename T>
+			friend auto operator-=(pulga::int8& p,T q){
+				
+				[&p,&q](){//TypeGuard
+					int temp = p.inv;  
+					temp -= int(q); 
+					
+					if(temp > maxLength) throw pulga_exception::int8_max_length_exceeded{};
+					if(temp < minLength) throw pulga_exception::int8_min_length_exceeded{};
+				}(); 
+				
+				 p.inv = p.inv -  q;
+				 return p.inv;
+			}
+			
+			template<typename T>
+			friend auto operator-=(T& q, pulga::int8 p){
+				
+				//Type Guard Not needed since p remains unchanged
+				
+				return q -= p.inv;
+			}
+
+			
+			/////////////////////////////////////////////////////
+			
+			auto operator/=(pulga::int8 p){
+				
+				[this,&p](){//TypeGuard
+					int temp = this->inv;  //Coversion is defined earlier
+					temp /= int(p); //Brute-Force Conversion int alse defined
+					
+					if(temp > maxLength) throw pulga_exception::int8_max_length_exceeded{};
+					if(temp < minLength) throw pulga_exception::int8_min_length_exceeded{};
+				}(); 
+				
+				 this->inv = this->inv /  p;
+				 return this->inv;
+				
+			}
+			
+			template<typename T>
+			friend auto operator/=(pulga::int8& p,T q){
+				
+				[&p,&q](){//TypeGuard
+					int temp = p.inv;  
+					temp /= int(q); 
+					
+					if(temp > maxLength) throw pulga_exception::int8_max_length_exceeded{};
+					if(temp < minLength) throw pulga_exception::int8_min_length_exceeded{};
+				}(); 
+				
+				 p.inv = p.inv /  q;
+				 return p.inv;
+			}
+			
+			template<typename T>
+			friend auto operator/=(T& q, pulga::int8 p){
+				
+				//Type Guard Not needed since p remains unchanged
+				
+				return q /= p.inv;
+			}
+			
+			
+			///////////////////////////////////////////////////////////
+			
+			auto operator%=(pulga::int8 p){
+				
+				[this,&p](){//TypeGuard
+					int temp = this->inv;  //Coversion is defined earlier
+					temp % int(p); //Brute-Force Conversion int alse defined
+					
+					if(temp > maxLength) throw pulga_exception::int8_max_length_exceeded{};
+					if(temp < minLength) throw pulga_exception::int8_min_length_exceeded{};
+				}(); 
+				
+				 this->inv = this->inv %  p;
+				 return this->inv;
+				
+			}
+			
+			template<typename T>
+			friend auto operator%=(pulga::int8& p,T q){
+				static_assert(std::is_integral<T>::value,"modulus operator, dont support floating numbers");
+				
+				[&p,&q](){//TypeGuard
+					int temp = p.inv;  
+					temp %= int(q); 
+					
+					if(temp > maxLength) throw pulga_exception::int8_max_length_exceeded{};
+					if(temp < minLength) throw pulga_exception::int8_min_length_exceeded{};
+				}(); 
+				
+				 p.inv = p.inv %  q;
+				 return p.inv;
+			}
+			
+			template<typename T>
+			friend auto operator%=(T& q, pulga::int8 p){
+				static_assert(std::is_integral<T>::value,"modulus operator, dont support floating numbers");
+				
+				//Type Guard Not needed since p remains unchanged
+				
+				return q %= p.inv;
+			}
+			
+			
+			/////////////////////////////////////////////////////////////////////////////////////////////////
+			auto operator*=(pulga::int8 p){
+				
+				[this,&p](){//TypeGuard
+					int temp = this->inv;  //Coversion is defined earlier
+					temp *= int(p); //Brute-Force Conversion int alse defined
+					
+					if(temp > maxLength) throw pulga_exception::int8_max_length_exceeded{};
+					if(temp < minLength) throw pulga_exception::int8_min_length_exceeded{};
+				}(); 
+				
+				 this->inv = this->inv *  p;
+				 return this->inv;
+				
+			}
+			
+			template<typename T>
+			friend auto operator*=(pulga::int8& p,T q){
+				
+				[&p,&q](){//TypeGuard
+					int temp = p.inv;  
+					temp *= int(q); 
+					
+					if(temp > maxLength) throw pulga_exception::int8_max_length_exceeded{};
+					if(temp < minLength) throw pulga_exception::int8_min_length_exceeded{};
+				}(); 
+				
+				 p.inv = p.inv *  q;
+				 return p.inv;
+			}
+			
+			template<typename T>
+			friend auto operator*=(T& q, pulga::int8 p){
+				
+				//Type Guard Not needed since p remains unchanged
+				
+				return q *= p.inv;
+			}
+			
+			////////////////////////////////////////////////////////////////////////
+			
+			auto operator<<=(pulga::int8 p){
+				
+				[this,&p](){//TypeGuard
+					int temp = this->inv;  //Coversion is defined earlier
+					temp << int(p); //Brute-Force Conversion int alse defined
+					
+					if(temp > maxLength) throw pulga_exception::int8_max_length_exceeded{};
+					if(temp < minLength) throw pulga_exception::int8_min_length_exceeded{};
+				}(); 
+				
+				 this->inv = this->inv <<  p;
+				 return this->inv;
+				
+			}
+			
+			template<typename T>
+			friend auto operator<<=(pulga::int8& p,T q){
+				static_assert(std::is_integral<T>::value,"left-shift operator, dont support floating numbers");
+				
+				[&p,&q](){//TypeGuard
+					int temp = p.inv;  
+					temp <<= int(q); 
+					
+					if(temp > maxLength) throw pulga_exception::int8_max_length_exceeded{};
+					if(temp < minLength) throw pulga_exception::int8_min_length_exceeded{};
+				}(); 
+				
+				 p.inv = p.inv <<  q;
+				 return p.inv;
+			}
+			
+			template<typename T>
+			friend auto operator<<=(T& q, pulga::int8 p){
+				static_assert(std::is_integral<T>::value,"left-shift operator, dont support floating numbers");
+				
+				//Type Guard Not needed since p remains unchanged
+				
+				return q <<= p.inv;
+			}
+			
+			////////////////////////////////////////////////////////////////////////////
+			auto operator&=(pulga::int8 p){
+				
+				[this,&p](){//TypeGuard
+					int temp = this->inv;  //Coversion is defined earlier
+					temp & int(p); //Brute-Force Conversion int alse defined
+					
+					if(temp > maxLength) throw pulga_exception::int8_max_length_exceeded{};
+					if(temp < minLength) throw pulga_exception::int8_min_length_exceeded{};
+				}(); 
+				
+				 this->inv = this->inv &  p;
+				 return this->inv;
+				
+			}
+			
+			template<typename T>
+			friend auto operator&=(pulga::int8& p,T q){
+				static_assert(std::is_integral<T>::value,"The bitwise & operator, dont support floating numbers");
+				
+				[&p,&q](){//TypeGuard
+					int temp = p.inv;  
+					temp &= int(q); 
+					
+					if(temp > maxLength) throw pulga_exception::int8_max_length_exceeded{};
+					if(temp < minLength) throw pulga_exception::int8_min_length_exceeded{};
+				}(); 
+				
+				 p.inv = p.inv &  q;
+				 return p.inv;
+			}
+			
+			template<typename T>
+			friend auto operator&=(T& q, pulga::int8 p){
+				static_assert(std::is_integral<T>::value,"The bitwise & operator, dont support floating numbers");
+				
+				//Type Guard Not needed since p remains unchanged
+				
+				return q &= p.inv;
+			}
+			//////////////////////////////////////////////////////////////////////////////////////
+			auto operator|=(pulga::int8 p){
+				
+				[this,&p](){//TypeGuard
+					int temp = this->inv;  //Coversion is defined earlier
+					temp | int(p); //Brute-Force Conversion int alse defined
+					
+					if(temp > maxLength) throw pulga_exception::int8_max_length_exceeded{};
+					if(temp < minLength) throw pulga_exception::int8_min_length_exceeded{};
+				}(); 
+				
+				 this->inv = this->inv |  p;
+				 return this->inv;
+				
+			}
+			
+			template<typename T>
+			friend auto operator|=(pulga::int8& p,T q){
+				static_assert(std::is_integral<T>::value,"the bitwise | operator, dont support floating numbers");
+				
+				[&p,&q](){//TypeGuard
+					int temp = p.inv;  
+					temp |= int(q); 
+					
+					if(temp > maxLength) throw pulga_exception::int8_max_length_exceeded{};
+					if(temp < minLength) throw pulga_exception::int8_min_length_exceeded{};
+				}(); 
+				
+				 p.inv = p.inv |  q;
+				 return p.inv;
+			}
+			
+			template<typename T>
+			friend auto operator|=(T& q, pulga::int8 p){
+				static_assert(std::is_integral<T>::value,"the bitwise | operator, dont support floating numbers");
+				
+				//Type Guard Not needed since p remains unchanged
+				
+				return q |= p.inv;
+			}
+			/////////////////////////////////////////////////////////////////////////////////////////////////////
+			auto operator^=(pulga::int8 p){
+				
+				[this,&p](){//TypeGuard
+					int temp = this->inv;  //Coversion is defined earlier
+					temp ^ int(p); //Brute-Force Conversion int alse defined
+					
+					if(temp > maxLength) throw pulga_exception::int8_max_length_exceeded{};
+					if(temp < minLength) throw pulga_exception::int8_min_length_exceeded{};
+				}(); 
+				
+				 this->inv = this->inv ^  p;
+				 return this->inv;
+				
+			}
+			
+			template<typename T>
+			friend auto operator^=(pulga::int8& p,T q){
+				static_assert(std::is_integral<T>::value,"the bitwise ^ operator, dont support floating numbers");
+				
+				[&p,&q](){//TypeGuard
+					int temp = p.inv;  
+					temp ^= int(q); 
+					
+					if(temp > maxLength) throw pulga_exception::int8_max_length_exceeded{};
+					if(temp < minLength) throw pulga_exception::int8_min_length_exceeded{};
+				}(); 
+				
+				 p.inv = p.inv ^  q;
+				 return p.inv;
+			}
+			
+			template<typename T>
+			friend auto operator^=(T& q, pulga::int8 p){
+				static_assert(std::is_integral<T>::value,"the bitwise ^ operator, dont support floating numbers");
+				
+				//Type Guard Not needed since p remains unchanged
+				
+				return q ^= p.inv;
+			}
+		
+		
+		
+			
+
+			
+			
+
+
+			
+			
+			
+			
+			
+	};
+}
+
+constexpr auto operator""_i8(unsigned long long p){
+	if(p > std::numeric_limits<int8_t>::max()){
+		//Due to the maxi and mini nature of 
+		//signed char
+		//for literal types the use of -128 is not
+		//portable
+		
+		throw pulga_exception::int8_literal_max_length_exceeded{};
+	}
 	
-		
-		operator float(){ return static_cast<float>(this->inv);}
-		operator double(){ return static_cast<double>(this->inv);}
-		operator long double(){ return static_cast<long double>(this->inv);}
-		
-		//There no coversion for type alias such as int8_t int18_t n cstdint
-		//users can add such conversion when needed
-		
-		//Unary Operators
-		
-		operator++(){return ++this->inv;}
-		operator++(int){ return this->inv++;}
-		operator--(){ return --this->inv;}
-		operator--(int){ return this->inv++;}
-		auto operator&(){ return &this->inv;}  //auto was specified to avoid implicit conversion to int of return type
-		operator*(){ return this->inv;}
-		operator!(){ return (this->inv)?true:false;}
-		
-		auto operator+(Int8 x)const{
-			return this->inv + x.inv;
-		}
-		
-		
-		auto operator-(Int8 x)const{
-			return this->inv - x.inv;
-		}
-		
-		auto operator*(Int8 x)const{
-			return this->inv * x.inv;
-		}
-
-		auto operator/(Int8 x)const{
-			return this->inv / x.inv;
-		}
-
-		
-		auto operator%(Int8 x)const{
-			return this->inv % x.inv;
-		}
-		
-		auto operator>>(Int8 x)const{
-			return this->inv >> x.inv;
-		}
-		
-		auto operator<<(Int8 x)const{
-			return this->inv << x.inv;
-		}
-		
-		bool operator<(Int8 x)const{
-			return this->inv < x.inv;
-		}
-		
-		bool operator>(Int8 x)const{
-			return this->inv > x.inv;
-		}
-		
-		bool operator<=(Int8 x)const{
-			return this->inv <= x.inv;
-		}
-		
-		bool operator>=(Int8 x)const{
-			return this->inv >= x.inv;
-		}
-		
-		bool operator==(Int8 x)const{
-			return this->inv == x.inv;
-		}
-		
-		bool operator!=(Int8 x)const{
-			return this->inv != x.inv;
-		}
-		
-		bool operator&&(Int8 x)const{
-			return this->inv && x.inv;
-		}
-		
-		bool operator||(Int8 x)const{
-			return this->inv || x.inv;
-		}
-		
-		bool operator&(Int8 x)const{
-			return this->inv & x.inv;
-		}
-		
-		bool operator|(Int8 x)const{
-			return this->inv | x.inv;
-		}
-		
-		bool operator^(Int8 x)const{
-			return this->inv ^ x.inv;
-		}
-		
-		auto operator+=(Int8 x)const{
-			return this->inv += x.inv;
-		}
-		
-		template<typename X>
-		auto operator+=(X arg){
-			static_assert(std::is_fundamental<X>::value);
-			return this->inv += arg;
-		}
-		
-		auto operator-=(Int8 x){
-			return this->inv -= x.inv;
-		}
-		
-		template<typename X>
-		auto operator-=(X arg){
-			static_assert(std::is_fundamental<X>::value);
-			return this->inv -= arg;
-		}
-		
-		auto operator*=(Int8 x){
-			return this->inv *= x.inv;
-		}
-		
-		template<typename X>
-		auto operator*=(X arg){
-			static_assert(std::is_fundamental<X>::value);
-			return this->inv *= arg;
-		}
-		
-		auto operator/=(Int8 x){
-			return this->inv /= x.inv;
-		}
-		
-		template<typename X>
-		auto operator/=(X arg){
-			static_assert(std::is_fundamental<X>::value);
-			return this->inv /= arg;
-		}
-		
-		auto operator%=(Int8 x){
-			return this->inv %= x.inv;
-		}
-		
-		template<typename X>
-		auto operator%=(X arg){
-			static_assert(std::is_fundamental<X>::value && std::is_integral<X>::value);
-			return this->inv %= arg;
-		}
-		
-		auto operator&=(Int8 x){
-			return this->inv &= x.inv;
-		}
-		
-		template<typename X>
-		auto operator&=(X arg){
-			static_assert(std::is_fundamental<X>::value && std::is_integral<X>::value);
-			return this->inv &= arg;
-		}
-		
-		auto operator|=(Int8 x){
-			return this->inv |= x.inv;
-		}
-		
-		template<typename X>
-		auto operator|=(X arg){
-			static_assert(std::is_fundamental<X>::value && std::is_integral<X>::value);
-			return this->inv |= arg;
-		}
-		
-		auto operator^=(Int8 x){
-			return this->inv ^= x.inv;
-		}
-		
-		template<typename X>
-		auto operator^=(X arg){
-			static_assert(std::is_fundamental<X>::value && std::is_integral<X>::value);
-			return this->inv ^= arg;
-		}
-		
-		
-		auto operator<<=(Int8 x){
-			return this->inv <<= x.inv;
-		}
-		
-		template<typename X>
-		auto operator<<=(X arg){
-			static_assert(std::is_fundamental<X>::value && std::is_integral<X>::value);
-			return this->inv <<= arg;
-		}
-		
-		auto operator>>=(Int8 x){
-			return this->inv >>= x.inv;
-		}
-		
-		template<typename X>
-		auto operator>>=(X arg){
-			static_assert(std::is_fundamental<X>::value && std::is_integral<X>::value);
-			return this->inv >>= arg;
-		}
-		
-};
-
-auto operator""_n8(unsigned long long literal){
-	//Literal of type Int8
-	return static_cast<int8_t>(literal);
-}
-
-
-///// Type conversion 
-
-template<typename T>
-T constexpr operator+(pulga::Int8 fr, T to){
-	static_assert(std::is_fundamental<T>::value);
-	return *fr + to;	
+	return pulga::int8{static_cast<int8_t>(p)};
 }
 
 template<typename T>
-T constexpr operator+(T fr, pulga::Int8 to){
-	static_assert(std::is_fundamental<T>::value);
-	return fr + *to;
+auto operator+(pulga::int8 fr, T to)->T{
+	return fr.res() + to;
+}
+
+template<typename T> 
+auto operator+(T to, pulga::int8 fr)->T{ 
+	return to + fr.res();
 }
 
 
 template<typename T>
-T constexpr operator-(pulga::Int8 fr, T to){
-	static_assert(std::is_fundamental<T>::value);
-	return *fr - to;	
+auto operator-(pulga::int8 fr, T to)->T{
+	return fr.res() - to;
 }
 
-template<typename T>
-T constexpr operator-(T fr, pulga::Int8 to){
-	static_assert(std::is_fundamental<T>::value);
-	return fr - *to;
-}
-
-
-template<typename T>
-T constexpr operator*(pulga::Int8 fr, T to){
-	static_assert(std::is_fundamental<T>::value);
-	return *fr * to;	
-}
-
-template<typename T>
-T constexpr operator*(T fr, pulga::Int8 to){
-	static_assert(std::is_fundamental<T>::value);
-	return fr * *to;
-}
-
-template<typename T>
-T constexpr operator%(pulga::Int8 fr, T to){
-	static_assert(std::is_fundamental<T>::value && std::is_integral<T>::value);
-	return *fr % to;	
-}
-
-template<typename T>
-T constexpr operator%(T fr, pulga::Int8 to){
-	static_assert(std::is_fundamental<T>::value && std::is_integral<T>::value);
-	return fr % *to;
+template<typename T> 
+auto operator-(T to, pulga::int8 fr)->T{ 
+	return to - fr.res();
 }
 
 
 template<typename T>
-bool constexpr operator<(pulga::Int8 fr, T to){
-	static_assert(std::is_fundamental<T>::value);
-	return *fr < to;	
+auto operator*(pulga::int8 fr, T to)->T{
+	return fr.res() * to;
+}
+
+template<typename T> 
+auto operator*(T to, pulga::int8 fr)->T{ 
+	return to * fr.res();
 }
 
 template<typename T>
-bool constexpr operator<(T fr, pulga::Int8 to){
-	static_assert(std::is_fundamental<T>::value);
-	return fr < *to;
+auto operator%(pulga::int8 fr, T to)->T{
+	static_assert(std::is_integral<T>::value,
+	"invalid operands of types "
+	"'int8_t'and 'long double' to binary 'operator%'");
+	return fr.res() % to;
 }
 
-template<typename T>
-T constexpr operator<<(pulga::Int8 fr, T to){
-	static_assert(std::is_fundamental<T>::value && std::is_integral<T>::value);
-	return *fr << to;	
-}
-
-template<typename T>
-T constexpr operator<<(T fr, pulga::Int8 to){
-	static_assert(std::is_fundamental<T>::value && std::is_integral<T>::value);
-	return fr << *to;
-}
-
-template<typename T>
-T constexpr operator>>(pulga::Int8 fr, T to){
-	static_assert(std::is_fundamental<T>::value && std::is_integral<T>::value);
-	return *fr >> to;	
-}
-
-template<typename T>
-T constexpr operator>>(T fr, pulga::Int8 to){
-	static_assert(std::is_fundamental<T>::value && std::is_integral<T>::value);
-	return fr >> *to;
+template<typename T> 
+auto operator%(T to, pulga::int8 fr)->T{ 
+	static_assert(std::is_integral<T>::value,
+	"invalid operands of types "
+	"'int8_t'and 'long double' to binary 'operator%'");
+	return to % fr.res();
 }
 
 
 template<typename T>
-bool constexpr operator>(pulga::Int8 fr, T to){
-	static_assert(std::is_fundamental<T>::value);
-	return *fr > to;	
+auto operator>>(pulga::int8 fr, T to)->T{
+	static_assert(std::is_integral<T>::value,
+	"invalid operands of types "
+	"'int8_t'and 'long double' to binary 'operator>>'");
+	return fr.res() >> to;
+}
+
+template<typename T> 
+auto operator>>(T to, pulga::int8 fr)->T{ 
+	static_assert(std::is_integral<T>::value,
+	"invalid operands of types "
+	"'int8_t'and 'long double' to binary 'operator>>'");
+	return to >> fr.res();
+}
+
+
+template<typename T>
+auto operator<<(pulga::int8 fr, T to)->T{
+	static_assert(std::is_integral<T>::value,
+	"invalid operands of types "
+	"'int8_t'and 'long double' to binary 'operator<<'");
+	return fr.res() << to;
+}
+
+template<typename T> 
+auto operator<<(T to, pulga::int8 fr)->T{ 
+	static_assert(std::is_integral<T>::value,
+	"invalid operands of types "
+	"'int8_t'and 'long double' to binary 'operator<<'");
+	return to << fr.res();
+}
+
+
+template<typename T>
+auto operator<(pulga::int8 fr, T to)->bool{
+	return fr.res() < to;
+}
+
+template<typename T> 
+auto operator<(T to, pulga::int8 fr)->bool{ 
+	return to < fr.res();
 }
 
 template<typename T>
-bool constexpr operator>(T fr, pulga::Int8 to){
-	static_assert(std::is_fundamental<T>::value);
-	return fr > *to;
+auto operator>(pulga::int8 fr, T to)->bool{
+	return fr.res() > to;
+}
+
+template<typename T> 
+auto operator>(T to, pulga::int8 fr)->bool{ 
+	return to > fr.res();
 }
 
 template<typename T>
-bool constexpr operator<=(pulga::Int8 fr, T to){
-	static_assert(std::is_fundamental<T>::value);
-	return *fr <= to;	
+auto operator<=(pulga::int8 fr, T to)->bool{
+	return fr.res() <= to;
+}
+
+template<typename T> 
+auto operator<=(T to, pulga::int8 fr)->bool{ 
+	return to <= fr.res();
 }
 
 template<typename T>
-bool constexpr operator<=(T fr, pulga::Int8 to){
-	static_assert(std::is_fundamental<T>::value);
-	return fr <= *to;
+auto operator>=(pulga::int8 fr, T to)->bool{
+	return fr.res() >= to;
+}
+
+template<typename T> 
+auto operator>=(T to, pulga::int8 fr)->bool{ 
+	return to >= fr.res();
 }
 
 template<typename T>
-bool constexpr operator==(pulga::Int8 fr, T to){
-	static_assert(std::is_fundamental<T>::value);
-	return *fr == to;	
+auto operator==(pulga::int8 fr, T to)->bool{
+	return fr.res() == to;
+}
+
+template<typename T> 
+auto operator==(T to, pulga::int8 fr)->bool{ 
+	return to == fr.res();
 }
 
 template<typename T>
-bool constexpr operator==(T fr, pulga::Int8 to){
-	static_assert(std::is_fundamental<T>::value);
-	return fr == *to;
+auto operator!=(pulga::int8 fr, T to)->bool{
+	return fr.res() != to;
+}
+
+template<typename T> 
+auto operator!=(T to, pulga::int8 fr)->bool{ 
+	return to != fr.res();
 }
 
 template<typename T>
-bool constexpr operator!=(pulga::Int8 fr, T to){
-	static_assert(std::is_fundamental<T>::value);
-	return *fr > to;	
+auto operator&(pulga::int8 fr, T to)->T{
+	static_assert(std::is_integral<T>::value,
+	"invalid operands of types "
+	"'int8_t'and 'long double' to binary 'operator&'");
+	return fr.res() & to;
+}
+
+template<typename T> 
+auto operator&(T to, pulga::int8 fr)->T{ 
+	static_assert(std::is_integral<T>::value,
+	"invalid operands of types "
+	"'int8_t'and 'long double' to binary 'operator&'");
+	return to & fr.res();
 }
 
 template<typename T>
-bool constexpr operator!=(T fr, pulga::Int8 to){
-	static_assert(std::is_fundamental<T>::value);
-	return fr != *to;
+auto operator^(pulga::int8 fr, T to)->T{
+	static_assert(std::is_integral<T>::value,
+	"invalid operands of types "
+	"'int8_t'and 'long double' to binary 'operator^'");
+	return fr.res() ^ to;
+}
+
+template<typename T> 
+auto operator^(T to, pulga::int8 fr)->T{ 
+	static_assert(std::is_integral<T>::value,
+	"invalid operands of types "
+	"'int8_t'and 'long double' to binary 'operator^'");
+	return to ^ fr.res();
 }
 
 template<typename T>
-bool constexpr operator&&(pulga::Int8 fr, T to){
-	static_assert(std::is_fundamental<T>::value);
-	return *fr && to;	
+auto operator|(pulga::int8 fr, T to)->T{
+	static_assert(std::is_integral<T>::value,
+	"invalid operands of types "
+	"'int8_t'and 'long double' to binary 'operator|'");
+	return fr.res() | to;
+}
+
+template<typename T> 
+auto operator|(T to, pulga::int8 fr)->T{ 
+	static_assert(std::is_integral<T>::value,
+	"invalid operands of types "
+	"'int8_t'and 'long double' to binary 'operator|'");
+	return to | fr.res();
 }
 
 template<typename T>
-bool constexpr operator&&(T fr, pulga::Int8 to){
-	static_assert(std::is_fundamental<T>::value);
-	return fr && *to;
+auto operator&&(pulga::int8 fr, T to)->bool{
+	return fr.res() && to;
 }
+
+template<typename T> 
+auto operator&&(T to, pulga::int8 fr)->bool{ 
+	return to && fr.res();
+}
+
 
 template<typename T>
-bool constexpr operator||(pulga::Int8 fr, T to){
-	static_assert(std::is_fundamental<T>::value);
-	return *fr || to;	
+auto operator||(pulga::int8 fr, T to)->bool{
+	return fr.res() || to;
 }
 
-template<typename T>
-bool constexpr operator||(T fr, pulga::Int8 to){
-	static_assert(std::is_fundamental<T>::value);
-	return fr || *to;
+template<typename T> 
+auto operator||(T to, pulga::int8 fr)->bool{ 
+	return to || fr.res();
 }
-
-template<typename T>
-T constexpr operator&(pulga::Int8 fr, T to){
-	static_assert(std::is_fundamental<T>::value && std::is_integral<T>::value);
-	return *fr & to;	
-}
-
-template<typename T>
-T constexpr operator&(T fr, pulga::Int8 to){
-	static_assert(std::is_fundamental<T>::value && std::is_integral<T>::value);
-	return fr & *to;
-}
-
-template<typename T>
-T constexpr operator|(pulga::Int8 fr, T to){
-	static_assert(std::is_fundamental<T>::value && std::is_integral<T>::value);
-	return *fr | to;	
-}
-
-template<typename T>
-T constexpr operator|(T fr, pulga::Int8 to){
-	static_assert(std::is_fundamental<T>::value && std::is_integral<T>::value);
-	return fr | *to;
-}
-
-template<typename T>
-T constexpr operator^(pulga::Int8 fr, T to){
-	static_assert(std::is_fundamental<T>::value && std::is_integral<T>::value);
-	return *fr ^ to;	
-}
-
-template<typename T>
-T constexpr operator^(T fr, pulga::Int8 to){
-	static_assert(std::is_fundamental<T>::value && std::is_integral<T>::value);
-	return fr ^ *to;
-}
-
